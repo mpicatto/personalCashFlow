@@ -1,6 +1,6 @@
 # personalCashFlow
 
-Challenge para ALKEMY lenguajes Java Script
+Challenge para ALKEMY.org lenguaje: Java Script
 
 Front-End: React, Redux, Material UI, Chart.js, Axios
 Back-End: Node.js, Express, Passport, Sequelize, Pg, Bcryptjs
