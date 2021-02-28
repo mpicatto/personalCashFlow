@@ -67,7 +67,7 @@ async function getMoves(req,res,next){
         res.sendStatus(400)
     })
     console.log(data.length)
-    res.send(data)
+    res.json(data)
 }
 
 module.exports = server;

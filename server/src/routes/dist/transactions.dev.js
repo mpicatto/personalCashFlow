@@ -18,9 +18,9 @@ var _require2 = require('sequelize'),
     Sequelize = _require2.Sequelize;
 
 var Op = Sequelize.Op; //-----------------------------get routes--------------------------------------------//
-//---------------get current balance + last5 balances + last 5 moves------------------ 
+//---------------get current balance + last5 balances + last 10 moves------------------ 
 
-server.get('/balance/:email/:last', getuser, getCategories, currentBalance, past5balances, getLast5movs);
+server.get('/balance/:email/:last', getuser, getCategories, currentBalance, past5balances, getLast10movs);
 
 function getuser(req, res, next) {
   var data, userId;
@@ -132,7 +132,7 @@ function currentBalance(req, res, next) {
 
         case 5:
           if (pastBalance === undefined) {
-            res.send({
+            res.json({
               currentBalance: {
                 balance: 0
               },
@@ -250,9 +250,9 @@ function past5balances(req, res, next) {
   });
 }
 
-function getLast5movs(req, res) {
+function getLast10movs(req, res) {
   var last, movementList;
-  return regeneratorRuntime.async(function getLast5movs$(_context5) {
+  return regeneratorRuntime.async(function getLast10movs$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
@@ -285,7 +285,7 @@ function getLast5movs(req, res) {
 
         case 4:
           req.data.movements = movementList;
-          res.send(req.data);
+          res.json(req.data);
 
         case 6:
         case "end":

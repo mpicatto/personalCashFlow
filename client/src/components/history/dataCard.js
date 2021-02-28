@@ -80,7 +80,7 @@ export function HistoryTable(props) {
 
   useEffect(()=>{
     populate(props)
-  },[])
+  },[props.history])
 
   const history = useHistory()
 

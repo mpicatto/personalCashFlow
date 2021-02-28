@@ -10,8 +10,8 @@ const Op = Sequelize.Op;
 
 
 
-//---------------get current balance + last5 balances + last 5 moves------------------ 
-server.get('/balance/:email/:last', getuser, getCategories, currentBalance,past5balances,getLast5movs  );
+//---------------get current balance + last5 balances + last 10 moves------------------ 
+server.get('/balance/:email/:last', getuser, getCategories, currentBalance,past5balances,getLast10movs  );
 
 async function getuser(req,res,next){
     let data={currentBalance:{},movements:[], categories:[]}
@@ -95,7 +95,7 @@ async function currentBalance(req,res,next){
         }
     })
     if (pastBalance===undefined){
-        res.send({currentBalance:{balance:0},
+        res.json({currentBalance:{balance:0},
         categories:req.data.categories})
     }else{
         req.data.currentBalance.balance  = pastBalance - expenses
@@ -188,7 +188,7 @@ async function currentBalance(req,res,next){
     next()
  }
 
-async function getLast5movs(req,res){
+async function getLast10movs(req,res){
     
     let last=parseInt((req.params.last))
     let movementList=[]
@@ -220,7 +220,7 @@ async function getLast5movs(req,res){
         return
     })
     req.data.movements=movementList
-    res.send(req.data)
+    res.json(req.data)
 }
 
 //-----------------------Save New Expenses Transactions---------------------------------------

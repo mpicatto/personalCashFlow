@@ -96,7 +96,7 @@ function getMoves(req, res, next) {
 
         case 7:
           console.log(data.length);
-          res.send(data);
+          res.json(data);
 
         case 9:
         case "end":
