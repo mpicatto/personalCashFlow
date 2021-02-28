@@ -18,11 +18,11 @@ var path = require('path');
 
 var _process$env = process.env,
     DB_USER = _process$env.DB_USER,
-    DB_PASSWORD = _process$env.DB_PASSWORD,
+    DB_PASS = _process$env.DB_PASS,
     DB_HOST = _process$env.DB_HOST,
     DB_DATABASE = _process$env.DB_DATABASE; //-----------------DB Credentials-------------------------------------//
 
-var sequelize = new Sequelize("postgres://postgres:root@localhost:5432/alkemyChallenge", {
+var sequelize = new Sequelize("postgres://".concat(DB_USER, ":").concat(DB_PASS, "@").concat(DB_HOST, "/").concat(DB_DATABASE), {
   logging: false,
   // set to console.log to see the raw SQL queries
   "native": false // lets Sequelize know we can use pg-native for ~30% more speed

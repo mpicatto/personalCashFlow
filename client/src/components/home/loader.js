@@ -45,6 +45,7 @@ export function Loader(props) {
       if(res.data.currentBalance.balance===0){
         props.setBalance({balance:res.data.currentBalance.balance})
         props.setCategories(res.data.categories)
+        props.setChartData([undefined])
         history.push("/home")
       }else{
         let data =[]

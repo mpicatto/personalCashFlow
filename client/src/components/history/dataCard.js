@@ -1,5 +1,7 @@
 import React,{useState,useEffect} from 'react';
+import {useHistory} from 'react-router-dom';
 import {connect} from 'react-redux';
+import Axios from 'axios'
 import cx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -80,6 +82,7 @@ export function HistoryTable(props) {
     populate(props)
   },[props.history])
 
+  const history = useHistory()
 
   const classes = useStyles();
   const cardHeaderStyles = useContainedCardHeaderStyles();
@@ -161,8 +164,14 @@ export function HistoryTable(props) {
     data.concept=move.concept
   }
 
-
-
+    Axios.put('http://localhost:3001/transactions/update_transaction/'+props.user.username,data,{withCredentials:true})
+    .then(res=>{
+      history.push("/loading")
+    })
+    .catch(err=>{
+      alert("Error al actualizar transacción. Por favor vuelva a intentar")
+    })
+ 
   }
 
   function populate(props){

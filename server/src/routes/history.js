@@ -41,6 +41,7 @@ async function getMoves(req,res,next){
     await Transactions.findAll({
         order:[['date', 'DESC']],
         where:{
+            userId:req.userId,
             date:{[Op.between]:[from,to]},
             type:type
         }

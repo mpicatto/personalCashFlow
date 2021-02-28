@@ -18,7 +18,7 @@ var _require2 = require('sequelize'),
     Sequelize = _require2.Sequelize;
 
 var Op = Sequelize.Op; //-----------------------------get routes--------------------------------------------//
-//---------------get current balance + last 5 moves------------------ 
+//---------------get current balance + last5 balances + last 5 moves------------------ 
 
 server.get('/balance/:email/:last', getuser, getCategories, currentBalance, past5balances, getLast5movs);
 
@@ -526,6 +526,122 @@ function newBalance(req, res) {
         case 19:
         case "end":
           return _context9.stop();
+      }
+    }
+  });
+} //---------------------------------Update expenses---------------------------------------
+
+
+server.put("/update_transaction/:email", getuser, updateData, updateBalances);
+
+function updateData(req, res, next) {
+  var _req$body2, id, date, type, categoryId, concept, amount, diff;
+
+  return regeneratorRuntime.async(function updateData$(_context10) {
+    while (1) {
+      switch (_context10.prev = _context10.next) {
+        case 0:
+          _req$body2 = req.body, id = _req$body2.id, date = _req$body2.date, type = _req$body2.type, categoryId = _req$body2.categoryId, concept = _req$body2.concept, amount = _req$body2.amount;
+          _context10.next = 3;
+          return regeneratorRuntime.awrap(Transactions.findByPk(id).then(function (transaction) {
+            console.log(transaction.amount);
+            console.log(amount);
+            console.log(type);
+
+            if (type === "ingreso") {
+              console.log("entro al ingreso");
+
+              if (amount === "0") {
+                console.log("entra al 0 ");
+                diff = parseInt(transaction.amount) - parseInt(transaction.amount) * 2;
+              } else if (transaction.amount <= amount) {
+                diff = parseInt(transaction.amount) - parseInt(amount);
+                diff = diff - diff * 2;
+              } else {
+                diff = parseInt(transaction.amount) - parseInt(amount);
+                diff = diff - diff * 2;
+              }
+            } else {
+              console.log("entro al egreso");
+
+              if (amount === "0") {
+                console.log("entra al 0 ");
+                diff = parseInt(transaction.amount) - parseInt(transaction.amount) * 2;
+                diff = diff - diff * 2;
+              } else {
+                diff = parseInt(transaction.amount) - parseInt(amount);
+              }
+            }
+
+            console.log(diff);
+            transaction.date = date;
+            transaction.type = type;
+            transaction.categoryId = categoryId;
+            transaction.concept = concept;
+            transaction.amount = amount;
+            transaction.save(); //   next() 
+          })["catch"](function (err) {
+            res.sendStatus(400);
+          }));
+
+        case 3:
+          req.diff = diff;
+          next();
+
+        case 5:
+        case "end":
+          return _context10.stop();
+      }
+    }
+  });
+}
+
+function updateBalances(req, res, next) {
+  var date, today, nextBalances;
+  return regeneratorRuntime.async(function updateBalances$(_context11) {
+    while (1) {
+      switch (_context11.prev = _context11.next) {
+        case 0:
+          date = req.body.date;
+          today = moment().format("YYYY-MM-DD");
+          nextBalances = [];
+          _context11.next = 5;
+          return regeneratorRuntime.awrap(Transactions.findAll({
+            order: [['date', 'ASC']],
+            where: {
+              userId: req.userId,
+              date: _defineProperty({}, Op.between, [date, today]),
+              type: ["saldo"]
+            }
+          }).then(function (transaction) {
+            transaction.map(function (item) {
+              nextBalances.push(item.dataValues);
+            });
+          })["catch"](function (err) {
+            res.sendStatus(400);
+          }));
+
+        case 5:
+          if (nextBalances.length === 0) {
+            res.sendStatus(200);
+          } else {
+            nextBalances.map(function (saldo) {
+              var newSaldo = "";
+              saldo.amount = parseFloat(saldo.amount) + req.diff;
+              newSaldo = saldo.amount.toString();
+              Transactions.findByPk(saldo.id).then(function (saldo) {
+                saldo.amount = newSaldo;
+                saldo.save();
+              })["catch"](function (err) {
+                res.sendStatus(400);
+              });
+            });
+            res.sendStatus(200);
+          }
+
+        case 6:
+        case "end":
+          return _context11.stop();
       }
     }
   });

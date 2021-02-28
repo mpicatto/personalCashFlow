@@ -4,12 +4,12 @@ const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 const {
-  DB_USER, DB_PASSWORD, DB_HOST, DB_DATABASE
+  DB_USER, DB_PASS, DB_HOST, DB_DATABASE
 } = process.env;
 
 //-----------------DB Credentials-------------------------------------//
 
-const sequelize = new Sequelize(`postgres://postgres:root@localhost:5432/alkemyChallenge`, {
+const sequelize = new Sequelize(`postgres://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_DATABASE}`, {
   logging: false, // set to console.log to see the raw SQL queries
   native: false // lets Sequelize know we can use pg-native for ~30% more speed
 });

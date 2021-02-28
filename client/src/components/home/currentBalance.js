@@ -50,6 +50,7 @@ export function Balance(props) {
   const cardShadowStyles = useSoftRiseShadowStyles({ inactive: true });
   const cardHeaderShadowStyles = useFadedShadowStyles();
 
+  console.log(props.chartData)
 
   return (
 
@@ -67,7 +68,7 @@ export function Balance(props) {
                 $ {props.balance}
             </Typography>
           </Grid>
-          {!props.chartData.includes(null)?
+          {!props.chartData.includes(undefined)?
           <Grid item xs={12} sm={9}>
             <Chart data={props.chartData} labels={props.chartLabels}/>
           </Grid>:null}

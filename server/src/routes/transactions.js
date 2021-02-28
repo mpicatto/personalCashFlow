@@ -10,7 +10,7 @@ const Op = Sequelize.Op;
 
 
 
-//---------------get current balance + last 5 moves------------------ 
+//---------------get current balance + last5 balances + last 5 moves------------------ 
 server.get('/balance/:email/:last', getuser, getCategories, currentBalance,past5balances,getLast5movs  );
 
 async function getuser(req,res,next){
@@ -422,6 +422,104 @@ async function newBalance(req,res){
         res.sendStatus(400)
     })
 }
+
+//---------------------------------Update expenses---------------------------------------
+
+server.put("/update_transaction/:email",getuser,updateData,updateBalances)
+
+async function updateData(req,res,next){
+    let{id,date,type,categoryId,concept,amount} = req.body
+    let diff
+    await Transactions.findByPk(id)
+    .then (transaction=>{
+        console.log(transaction.amount)
+        console.log(amount)
+        console.log(type)
+        if (type==="ingreso"){
+            console.log("entro al ingreso")
+            if (amount==="0"){
+            console.log("entra al 0 ")
+            diff = parseInt(transaction.amount)-parseInt(transaction.amount)*2 
+        }else if(transaction.amount <= amount) {
+            diff = parseInt(transaction.amount)-parseInt(amount)
+            diff = diff - diff*2
+        }else{
+            diff = parseInt(transaction.amount)-parseInt(amount)
+            diff = diff - diff*2
+        }}else{console.log("entro al egreso")
+            if (amount==="0"){
+                console.log("entra al 0 ")
+                diff = parseInt(transaction.amount) - parseInt(transaction.amount)*2
+                diff = diff - diff*2
+            }else  {
+                diff = parseInt(transaction.amount)-parseInt(amount)
+            }
+        }
+        
+        console.log(diff)
+        transaction.date = date;
+        transaction.type = type;
+        transaction.categoryId = categoryId;
+        transaction.concept = concept;
+        transaction.amount = amount;
+        transaction.save();
+       //   next() 
+    })
+    .catch(err=>{
+        res.sendStatus(400)
+    })
+
+    req.diff=diff
+    next()
+}
+
+async function updateBalances (req,res,next){
+
+    let date=req.body.date
+    let today = moment().format("YYYY-MM-DD")
+    let nextBalances=[]
+
+    await Transactions.findAll({
+        order:[['date', 'ASC']],
+        where:{
+            userId:req.userId,
+            date:{[Op.between]:[date,today]},
+            type:["saldo"]
+        }
+    })
+    .then(transaction=>{
+        transaction.map(item=>{
+            nextBalances.push(item.dataValues)
+        })
+
+    })
+    .catch(err=>{
+        res.sendStatus(400)
+    })
+
+    if (nextBalances.length===0){
+        res.sendStatus(200)
+    }else{
+        nextBalances.map(saldo=>{
+            let newSaldo = ""
+            saldo.amount=parseFloat(saldo.amount) + req.diff
+            newSaldo=saldo.amount.toString()
+            Transactions.findByPk(saldo.id)
+            .then(saldo=>{
+                saldo.amount=newSaldo
+                saldo.save()
+            })
+            .catch(err=>{
+                res.sendStatus(400)
+            })
+        })
+        res.sendStatus(200)
+    }
+    
+}
+
+
+
 
 
 
