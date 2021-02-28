@@ -13,6 +13,7 @@ const Op = Sequelize.Op;
 //---------------get current balance + last5 balances + last 10 moves------------------ 
 server.get('/balance/:email/:last', getuser, getCategories, currentBalance,past5balances,getLast10movs  );
 
+//--------getuser function gets user's id from db and creates req.data object------------ 
 async function getuser(req,res,next){
     let data={currentBalance:{},movements:[], categories:[]}
     let userId
@@ -34,6 +35,7 @@ async function getuser(req,res,next){
   
 }
 
+//--------getCategories fuction get transaction categories from db and add the to req.data object------------ 
 async function getCategories(req,res,next){
     
     let categoryList=[]
@@ -52,6 +54,8 @@ async function getCategories(req,res,next){
     next()
 }
 
+// currentBalance calculates today's account balance substracting to the last balance saved in db
+// the expenses register afterwards. ------
 async function currentBalance(req,res,next){
     let pastBalance
     let pastBalanceDate
@@ -70,17 +74,17 @@ async function currentBalance(req,res,next){
         if (transaction){
             pastBalance = parseFloat(transaction[0].dataValues.amount)
             pastBalanceDate = transaction[0].dataValues.date
-        }else{
         }
     })
     .catch(err=>{
-        console.log("error")
-        return
+        pastBalance=0
+        pastBalanceDate='1970/01/01'
     })
 
     await Transactions.findAll({
         order:[['date', 'DESC']],
         where:{
+            userId:req.userId,
             date:{[Op.between]:[pastBalanceDate,today]},
             type:["egreso"]
         }
@@ -94,7 +98,7 @@ async function currentBalance(req,res,next){
           })
         }
     })
-    if (pastBalance===undefined){
+    if (pastBalance===0 && expenses===0 ){
         res.json({currentBalance:{balance:0},
         categories:req.data.categories})
     }else{
@@ -104,7 +108,8 @@ async function currentBalance(req,res,next){
     }
 
 }
-
+ // past5balances calculate the balance for each day and then (income - expenses for single date)
+ // then calculate account balance for each date.
  async function past5balances(req,res,next){
     let last30Moves=[]
     let dailyMoves=[]
@@ -188,6 +193,7 @@ async function currentBalance(req,res,next){
     next()
  }
 
+ //getLast10movs retreives last 10 transactions
 async function getLast10movs(req,res){
     
     let last=parseInt((req.params.last))
@@ -224,9 +230,10 @@ async function getLast10movs(req,res){
 }
 
 //-----------------------Save New Expenses Transactions---------------------------------------
- 
+
 server.post("/new_egreso/:email",getuser, saveData,ifLastExpenseChecker)
 
+//save date save new expense data into database
 async function saveData(req,res,next){
     let{date,type,categoryId,concept,amount} = req.body
     let userId = req.userId
@@ -246,6 +253,9 @@ async function saveData(req,res,next){
         res.sendStatus(400)
     })
 }
+//ifLastExpenseChecker verifies if record saved in cronologically the last one;
+// if not, and if there are later balances in the db, the balances are 
+//recalculated with the new expense
 
 async function ifLastExpenseChecker(req,res,next){
 
@@ -296,6 +306,8 @@ async function ifLastExpenseChecker(req,res,next){
  
 server.post("/new_ingreso/:email",getuser, saveData,ifLastIncomeChecker,newBalance)
 
+//ifLastIncomeChecker verifies if income saved is the last record in cronological order, 
+//if so later balances are recomputed
 async function ifLastIncomeChecker(req,res,next){
     let userId = req.userId
     let date=req.body.date
@@ -345,6 +357,7 @@ async function ifLastIncomeChecker(req,res,next){
    
 }
 
+//new balance recor is saved
 async function newBalance(req,res){
     let date = req.body.date    
 
@@ -423,10 +436,12 @@ async function newBalance(req,res){
     })
 }
 
-//---------------------------------Update expenses---------------------------------------
+//---------------------------------Update transactios---------------------------------------
 
 server.put("/update_transaction/:email",getuser,updateData,updateBalances)
 
+//updateData update data transactions and calculate the difference in the "amount"
+// to recalculate later balances
 async function updateData(req,res,next){
     let{id,date,type,categoryId,concept,amount} = req.body
     let diff
@@ -470,15 +485,17 @@ async function updateData(req,res,next){
     })
 
     req.diff=diff
+    req.date=date
     next()
 }
 
 async function updateBalances (req,res,next){
 
-    let date=req.body.date
+    let date=req.date
     let today = moment().format("YYYY-MM-DD")
     let nextBalances=[]
-
+    console.log("entro al update balances")
+    console.log(date)
     await Transactions.findAll({
         order:[['date', 'ASC']],
         where:{
@@ -518,9 +535,49 @@ async function updateBalances (req,res,next){
     
 }
 
+//---------------------------------delete transactios---------------------------------------
+
+server.delete("/delete_transaction/:email/:id",getuser,deleteData,updateBalances)
 
 
+//deleteData erases data transactions and calculate the difference in the "amount"
+// to recalculate later balances
+async function deleteData(req,res,next){
+    let id = req.params.id
+    let type="egreso"
+    let date
+    let diff
+    await Transactions.findByPk(id)
+    .then (transaction=>{
+        date=transaction.date
+        id=parseInt(id)+1
+        if (transaction.type==="ingreso"){
+            diff=parseInt(transaction.amount) - parseInt(transaction.amount)*2
+            type="ingreso"
+        }else{
+            diff = parseInt(transaction.amount)
+        }
+        
+        console.log(diff)
+        transaction.destroy();
+    })
+    .catch(err=>{
+        res.sendStatus(400)
+    })
 
+    if (type==="ingreso"){
+        await Transactions.findByPk(id)
+        .then(transaction=>{
+            transaction.destroy()
+        }
+        )
+
+    }
+    req.diff=diff
+    req.date=date
+    next()
+    
+}
 
 
 module.exports = server;

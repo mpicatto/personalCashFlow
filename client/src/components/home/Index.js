@@ -24,6 +24,8 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Balance from './currentBalance'
 import LastMoves from './lastMoves'
 
+//----------This component renders the drawer tool bar and the component to render the balance and the last movements ----------- 
+
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({

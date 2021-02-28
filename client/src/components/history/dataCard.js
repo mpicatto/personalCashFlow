@@ -19,6 +19,7 @@ import { useFadedShadowStyles } from '@mui-treasury/styles/shadow/faded';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
 //--------------Table Imports--------------------------------------------------
@@ -33,7 +34,10 @@ import TablePagination from '@material-ui/core/TablePagination';
 import EditIcon from '@material-ui/icons/Edit';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CancelIcon from '@material-ui/icons/Cancel';
+import DeleteIcon from '@material-ui/icons/Delete';
 
+//----------This component renders a chart showing the transactions history and
+//           enable the user to update information trough a modal form   ----------- 
 
 const useStyles = makeStyles(({ spacing }) => ({
   card: {
@@ -69,17 +73,19 @@ const columns = [
   {id: 'concepto', label: 'Concepto', minWidth: 100 },
   {id: 'categoria', label: 'Categoria', minWidth: 50,align: 'right'},
   {id: 'monto',label: 'Monto',minWidth: 100,align: 'right'},
-  {id: 'editar',label: 'Editar',minWidth: 50,align: 'right'}
+  {id: 'editar',label: 'Editar',minWidth: 50,align: 'right'},
+  {id: 'borrar',label: 'Borrar',minWidth: 50,align: 'right'}
 ]
 
-function createData(fecha,concepto,categoria,monto,editar) {
-  return {fecha,concepto,categoria,monto,editar};
+function createData(fecha,concepto,categoria,monto,editar,borrar) {
+  return {fecha,concepto,categoria,monto,editar,borrar};
 }
 
 export function HistoryTable(props) {
 
   useEffect(()=>{
     populate(props)
+    setPage(0)
   },[props.history])
 
   const history = useHistory()
@@ -90,7 +96,9 @@ export function HistoryTable(props) {
   const cardHeaderShadowStyles = useFadedShadowStyles();
   const [since,setSince]=useState();
   const [untill,setUntill]=useState()
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDelete,setOpenDelete]=useState(false);
+  const [deleteIndex, setDeleteIndex]=useState()
   const [transaction,setTransaction]=useState({date:"",categoryId:"",amount:"",type:"",concept:""})
 
 
@@ -130,13 +138,23 @@ export function HistoryTable(props) {
     setOpen(false);
   };
 
+  const handleClickOpenDelete = (index) => {
+    setOpenDelete(true);
+    setDeleteIndex(index)
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+  };
+
   const handleInputChange = function(e) {
     setTransaction({
       ...transaction,
       [e.target.name]:e.target.value
     })
-    console.log(transaction)
   }
+  
+
 
   const saveOp = function(e){
 
@@ -175,6 +193,22 @@ export function HistoryTable(props) {
  
   }
 
+  const deleteOp = async(e)=>{
+
+    let id = historicMoves[deleteIndex].id
+    await Axios.delete('http://localhost:3001/transactions/delete_transaction/'+props.user.username+'/'+id,{withCredentials:true})
+    .then(res=>{
+      if (res) alert("Transacción Eliminada")
+      props.cleanHistory()
+      history.push("/loading") 
+    })
+    .catch(err =>{
+      alert("Error al eliminar transacción")
+    })
+
+
+  }
+
   function populate(props){
     rows =[]
     historicMoves = []
@@ -203,7 +237,11 @@ export function HistoryTable(props) {
           "$ "+ item.amount,
           <IconButton variant="outlined" onClick={()=>handleClickOpen(historicMoves.indexOf(item))} >
             <EditIcon color="black" />
+          </IconButton>,
+          <IconButton variant="outlined" onClick={()=>handleClickOpenDelete(historicMoves.indexOf(item))} >
+           <DeleteIcon color="black" />
           </IconButton>
+          
           ))
         }  
       })
@@ -227,6 +265,8 @@ export function HistoryTable(props) {
               <TableCell align="left">Concepto</TableCell>
               <TableCell align="right">Categoria</TableCell>
               <TableCell align="right">Monto</TableCell>
+              <TableCell align="right">Editar</TableCell>
+              <TableCell align="right">Borrar</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -282,25 +322,6 @@ export function HistoryTable(props) {
               onChange={(e) => handleInputChange(e)}
               helperText="Selecione Fecha de la Operación"
             />
-          </Grid>
-          <Grid item  xs={12} sm={3} >
-            <TextField
-                id="type"
-                name="type"
-                select
-                label="Tipo de Operacion"
-                variant="outlined"
-                required
-                fullWidth
-                placeholder={move.type}
-                onChange={(e) => handleInputChange(e)}
-                helperText="Seleccione el tipo de Operación"
-                >
-
-                {moveType.map(item =>{
-                    return <MenuItem value={item}>{item}</MenuItem>   
-                })}
-            </TextField>
           </Grid>
           <Grid item  xs={12} sm={3} >
             <TextField
@@ -386,6 +407,37 @@ export function HistoryTable(props) {
             </Button>
           </Grid>
         </Grid>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openDelete}
+        onClose={handleCloseDelete}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Se Eliminará la Transacción"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Si acepta se borrara completamente la transacción seleccionada
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                startIcon={<CancelIcon/>}
+                onClick={()=>handleCloseDelete()}>
+            Cancelar
+          </Button>
+          <Button                 
+                variant="contained"
+                color="secondary"
+                className={classes.button}
+                startIcon={<CheckBoxIcon/>}
+                onClick={(e)=>deleteOp(e)}>
+            Aceptar
+          </Button>
         </DialogActions>
       </Dialog>  
       </CardContent>

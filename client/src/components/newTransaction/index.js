@@ -24,6 +24,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 //------------------Import Components----------------------------------
 import NewMoves from './newTransaction'
 
+//----------This component renders the drawer toolbar ----------- 
 
 const drawerWidth = 240;
 

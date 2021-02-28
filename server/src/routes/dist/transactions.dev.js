@@ -20,7 +20,7 @@ var _require2 = require('sequelize'),
 var Op = Sequelize.Op; //-----------------------------get routes--------------------------------------------//
 //---------------get current balance + last5 balances + last 10 moves------------------ 
 
-server.get('/balance/:email/:last', getuser, getCategories, currentBalance, past5balances, getLast10movs);
+server.get('/balance/:email/:last', getuser, getCategories, currentBalance, past5balances, getLast10movs); //--------getuser function gets user's id from db and creates req.data object------------ 
 
 function getuser(req, res, next) {
   var data, userId;
@@ -56,7 +56,8 @@ function getuser(req, res, next) {
       }
     }
   });
-}
+} //--------getCategories fuction get transaction categories from db and add the to req.data object------------ 
+
 
 function getCategories(req, res, next) {
   var categoryList;
@@ -85,7 +86,9 @@ function getCategories(req, res, next) {
       }
     }
   });
-}
+} // currentBalance calculates today's account balance substracting to the last balance saved in db
+// the expenses register afterwards. ------
+
 
 function currentBalance(req, res, next) {
   var pastBalance, pastBalanceDate, today, expenses;
@@ -106,10 +109,10 @@ function currentBalance(req, res, next) {
             if (transaction) {
               pastBalance = parseFloat(transaction[0].dataValues.amount);
               pastBalanceDate = transaction[0].dataValues.date;
-            } else {}
+            }
           })["catch"](function (err) {
-            console.log("error");
-            return;
+            pastBalance = 0;
+            pastBalanceDate = '1970/01/01';
           }));
 
         case 3:
@@ -117,6 +120,7 @@ function currentBalance(req, res, next) {
           return regeneratorRuntime.awrap(Transactions.findAll({
             order: [['date', 'DESC']],
             where: {
+              userId: req.userId,
               date: _defineProperty({}, Op.between, [pastBalanceDate, today]),
               type: ["egreso"]
             }
@@ -131,7 +135,7 @@ function currentBalance(req, res, next) {
           }));
 
         case 5:
-          if (pastBalance === undefined) {
+          if (pastBalance === 0 && expenses === 0) {
             res.json({
               currentBalance: {
                 balance: 0
@@ -150,7 +154,9 @@ function currentBalance(req, res, next) {
       }
     }
   });
-}
+} // past5balances calculate the balance for each day and then (income - expenses for single date)
+// then calculate account balance for each date.
+
 
 function past5balances(req, res, next) {
   var last30Moves, dailyMoves, dailyBalance, currentBalance, i, j, balance;
@@ -248,7 +254,8 @@ function past5balances(req, res, next) {
       }
     }
   });
-}
+} //getLast10movs retreives last 10 transactions
+
 
 function getLast10movs(req, res) {
   var last, movementList;
@@ -296,7 +303,7 @@ function getLast10movs(req, res) {
 } //-----------------------Save New Expenses Transactions---------------------------------------
 
 
-server.post("/new_egreso/:email", getuser, saveData, ifLastExpenseChecker);
+server.post("/new_egreso/:email", getuser, saveData, ifLastExpenseChecker); //save date save new expense data into database
 
 function saveData(req, res, next) {
   var _req$body, date, type, categoryId, concept, amount, userId;
@@ -327,7 +334,10 @@ function saveData(req, res, next) {
       }
     }
   });
-}
+} //ifLastExpenseChecker verifies if record saved in cronologically the last one;
+// if not, and if there are later balances in the db, the balances are 
+//recalculated with the new expense
+
 
 function ifLastExpenseChecker(req, res, next) {
   var date, today, nextBalances;
@@ -381,7 +391,8 @@ function ifLastExpenseChecker(req, res, next) {
 } //-----------------------Save New Income Transactions---------------------------------------
 
 
-server.post("/new_ingreso/:email", getuser, saveData, ifLastIncomeChecker, newBalance);
+server.post("/new_ingreso/:email", getuser, saveData, ifLastIncomeChecker, newBalance); //ifLastIncomeChecker verifies if income saved is the last record in cronological order, 
+//if so later balances are recomputed
 
 function ifLastIncomeChecker(req, res, next) {
   var userId, date, today, nextBalances;
@@ -435,7 +446,8 @@ function ifLastIncomeChecker(req, res, next) {
       }
     }
   });
-}
+} //new balance recor is saved
+
 
 function newBalance(req, res) {
   var date, lastYearDate, userId, newBalance, pastBalance, pastBalanceDate, pastYear;
@@ -529,10 +541,11 @@ function newBalance(req, res) {
       }
     }
   });
-} //---------------------------------Update expenses---------------------------------------
+} //---------------------------------Update transactios---------------------------------------
 
 
-server.put("/update_transaction/:email", getuser, updateData, updateBalances);
+server.put("/update_transaction/:email", getuser, updateData, updateBalances); //updateData update data transactions and calculate the difference in the "amount"
+// to recalculate later balances
 
 function updateData(req, res, next) {
   var _req$body2, id, date, type, categoryId, concept, amount, diff;
@@ -586,9 +599,10 @@ function updateData(req, res, next) {
 
         case 3:
           req.diff = diff;
+          req.date = date;
           next();
 
-        case 5:
+        case 6:
         case "end":
           return _context10.stop();
       }
@@ -602,10 +616,12 @@ function updateBalances(req, res, next) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
-          date = req.body.date;
+          date = req.date;
           today = moment().format("YYYY-MM-DD");
           nextBalances = [];
-          _context11.next = 5;
+          console.log("entro al update balances");
+          console.log(date);
+          _context11.next = 7;
           return regeneratorRuntime.awrap(Transactions.findAll({
             order: [['date', 'ASC']],
             where: {
@@ -621,7 +637,7 @@ function updateBalances(req, res, next) {
             res.sendStatus(400);
           }));
 
-        case 5:
+        case 7:
           if (nextBalances.length === 0) {
             res.sendStatus(200);
           } else {
@@ -639,9 +655,63 @@ function updateBalances(req, res, next) {
             res.sendStatus(200);
           }
 
-        case 6:
+        case 8:
         case "end":
           return _context11.stop();
+      }
+    }
+  });
+} //---------------------------------delete transactios---------------------------------------
+
+
+server["delete"]("/delete_transaction/:email/:id", getuser, deleteData, updateBalances); //deleteData erases data transactions and calculate the difference in the "amount"
+// to recalculate later balances
+
+function deleteData(req, res, next) {
+  var id, type, date, diff;
+  return regeneratorRuntime.async(function deleteData$(_context12) {
+    while (1) {
+      switch (_context12.prev = _context12.next) {
+        case 0:
+          id = req.params.id;
+          type = "egreso";
+          _context12.next = 4;
+          return regeneratorRuntime.awrap(Transactions.findByPk(id).then(function (transaction) {
+            date = transaction.date;
+            id = parseInt(id) + 1;
+
+            if (transaction.type === "ingreso") {
+              diff = parseInt(transaction.amount) - parseInt(transaction.amount) * 2;
+              type = "ingreso";
+            } else {
+              diff = parseInt(transaction.amount);
+            }
+
+            console.log(diff);
+            transaction.destroy();
+          })["catch"](function (err) {
+            res.sendStatus(400);
+          }));
+
+        case 4:
+          if (!(type === "ingreso")) {
+            _context12.next = 7;
+            break;
+          }
+
+          _context12.next = 7;
+          return regeneratorRuntime.awrap(Transactions.findByPk(id).then(function (transaction) {
+            transaction.destroy();
+          }));
+
+        case 7:
+          req.diff = diff;
+          req.date = date;
+          next();
+
+        case 10:
+        case "end":
+          return _context12.stop();
       }
     }
   });

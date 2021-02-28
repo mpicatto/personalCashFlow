@@ -7,6 +7,9 @@ Chart.defaults.global.defaultFontFamily = "'PT Sans', sans-serif"
 // Chart.defaults.global.legend.display = true;
 // Chart.defaults.global.elements.line.tension = 0;
 
+//----------This component renders a chart showing the evolution of the last 5 daily balances. 
+//           It will only be shown if 5 daily balances can be computed ----------- 
+
 export default class LineGraph extends PureComponent {
     chartRef = React.createRef();
 

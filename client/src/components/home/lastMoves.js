@@ -22,6 +22,7 @@ import Button from '@material-ui/core/Button';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import { Grid } from '@material-ui/core';
 
+//----------This component renders the last 10 balances ----------- 
 
 const useStyles = makeStyles(({ spacing }) => ({
   card: {
@@ -57,6 +58,7 @@ export function LastMoves(props) {
 
   useEffect(()=>{
     populate(props)
+
   },[])
 
 
@@ -98,7 +100,7 @@ export function LastMoves(props) {
       <CardHeader
         className={cardHeaderShadowStyles.root}
         classes={cardHeaderStyles}
-        title={'Ultimos 5 Movimientos'}
+        title={'Ultimos 10 Movimientos'}
         subheader={'Desde: '+since+' Hasta: '+untill}
       />
       <CardContent className={classes.content}>

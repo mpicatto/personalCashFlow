@@ -13,13 +13,9 @@ import Container from '@material-ui/core/Container';
 import Axios from 'axios';
 import {setUser} from '../../actions/user.js';
 import {connect} from 'react-redux';
-/*
 
-
-*/
-
-  
-  //LOS ESTILOS DEL FORMULARIO SETEADOS
+ //----------This component logs in users using credencials ----------- 
+ 
   const useStyles = makeStyles((theme) => ({
     paper: {
       marginTop: theme.spacing(8),
@@ -41,7 +37,6 @@ import {connect} from 'react-redux';
   }));
   
 
-  //LOGIN PRINCIPAL DE LA PAGINA!
   export function Login(props) {
     const history = useHistory()
     const classes = useStyles();
@@ -50,7 +45,6 @@ import {connect} from 'react-redux';
       password:''
     });
 
-    //MANEJO DE ONCHANGE()
     const handleInputChange = function(e) {
       setInput({
         ...input,

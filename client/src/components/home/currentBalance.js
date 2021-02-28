@@ -18,6 +18,8 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Chart from './balanceChart'
 
+//----------This component displays the current balance and the Chart component ----------- 
+
 const useStyles = makeStyles(({ spacing }) => ({
   card: {
     marginTop: 40,

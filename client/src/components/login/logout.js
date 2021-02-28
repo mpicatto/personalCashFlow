@@ -10,8 +10,7 @@ import {cleanBalance} from './../../actions/balance';
 import {cleanMoves} from './../../actions/transactions';
 import {cleanUser} from './../../actions/user';
 
-//------------------Import Components----------------------------------
-
+//----------This component clears the Redux Store and log out user from server----------- 
 
 const useStyles = makeStyles((theme) => ({
     cards: {

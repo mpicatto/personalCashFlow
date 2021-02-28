@@ -19,6 +19,8 @@ import Button from '@material-ui/core/Button';
 import moment from 'moment';
 import Grid from '@material-ui/core/Grid';
 
+//----------This component register new transactions into the system ----------- 
+
 const useStyles = makeStyles(({ spacing }) => ({
   card: {
     marginTop: 40,

@@ -8,7 +8,8 @@ import {setCategories,setMoves} from '../../actions/transactions';
 import {setBalance,setChartData,setChartLabels} from '../../actions/balance';
 
 //------------------Import Components----------------------------------
-
+//----------This component load user information and serves it to the rest of the components. 
+//           It is triggered after login or in the event new transactions are added or updated--------- ----------- 
 
 const useStyles = makeStyles((theme) => ({
     cards: {

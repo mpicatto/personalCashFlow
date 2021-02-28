@@ -29,6 +29,9 @@ import {setHistory} from '../../actions/history.js';
 //------------------Import Components----------------------------------
 import History from './dataCard'
 
+//----------This component reders the drawer toolbat to and perform the search functions 
+//          to browse trough  transaction history ----------- 
+
 let moveType=['todas',"ingreso", "egreso"]
 
 const drawerWidth = 240;
