@@ -1,12 +1,12 @@
 import React,{useState,useEffect} from 'react';
 import {useHistory} from 'react-router-dom';
 import {connect} from 'react-redux';
+import {cleanHistory} from './../../actions/history'
 import Axios from 'axios'
 import cx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import {MenuItem,Button,IconButton,TextField,InputAdornment} from '@material-ui/core';
-
 
 //----------Card imports------------------------------------------------------
 import Card from '@material-ui/core/Card';
@@ -80,7 +80,7 @@ export function HistoryTable(props) {
 
   useEffect(()=>{
     populate(props)
-  },[props.history])
+  },[])
 
   const history = useHistory()
 
@@ -166,6 +166,7 @@ export function HistoryTable(props) {
 
     Axios.put('http://localhost:3001/transactions/update_transaction/'+props.user.username,data,{withCredentials:true})
     .then(res=>{
+      props.cleanHistory()
       history.push("/loading")
     })
     .catch(err=>{
@@ -401,4 +402,10 @@ const mapStateToProps = state => {
   }		
 }
 
-export default connect(mapStateToProps)(HistoryTable);
+const mapDispatchToProps = dispatch => {
+  return {
+    cleanHistory: ()=>dispatch(cleanHistory()),
+  }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(HistoryTable);

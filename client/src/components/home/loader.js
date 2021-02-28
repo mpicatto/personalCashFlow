@@ -39,7 +39,7 @@ export function Loader(props) {
   const styles = useStyles();
 
     const getBalance = (props)=>{
-     Axios.get('http://localhost:3001/transactions/balance/'+props.user.username+'/5',{withCredentials:true})
+     Axios.get('http://localhost:3001/transactions/balance/'+props.user.username+'/10',{withCredentials:true})
     .then(res=>{
       console.log(res.data)
       if(res.data.currentBalance.balance===0){
